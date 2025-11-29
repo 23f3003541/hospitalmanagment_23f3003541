@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Medical History - Hospital Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .history-container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .header-section {
+            background: linear-gradient(135deg, #0277bd 0%, #0069d9 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .header-section h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+        .patient-info {
+            background: #e7f3ff;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #0277bd;
+            margin-bottom: 25px;
+        }
+        .patient-info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #0277bd;
+        }
+        .info-value {
+            color: #333;
+        }
+        .tab-section {
+            margin-bottom: 30px;
+        }
+        .nav-tabs {
+            border-bottom: 2px solid #dee2e6;
+        }
+        .nav-link {
+            color: #333;
+            font-weight: 500;
+            border: none;
+            border-bottom: 3px solid transparent;
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .nav-link:hover {
+            color: #0277bd;
+            border-bottom-color: #0277bd;
+        }
+        .nav-link.active {
+            color: #0277bd;
+            border-bottom-color: #0277bd;
+            background: none;
+        }
+        .appointment-card {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+        .appointment-card:hover {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+            transform: translateY(-2px);
+        }
+        .appointment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .appointment-date {
+            font-weight: 600;
+            color: #0277bd;
+            font-size: 1.1rem;
+        }
+        .appointment-time {
+            color: #666;
+            font-size: 0.95rem;
+        }
+        .appointment-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        .status-booked {
+            background: #cce5ff;
+            color: #004085;
+        }
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-cancelled {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .appointment-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #555;
+            min-width: 100px;
+        }
+        .detail-value {
+            color: #333;
+        }
+        .treatment-section {
+            background: #f9f9f9;
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 12px;
+            border-left: 4px solid #28a745;
+        }
+        .treatment-title {
+            font-weight: 600;
+            color: #28a745;
+            margin-bottom: 8px;
+        }
+        .treatment-item {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .treatment-item:last-child {
+            border-bottom: none;
+        }
+        .treatment-label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9rem;
+        }
+        .treatment-content {
+            color: #333;
+            margin-top: 4px;
+            line-height: 1.5;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #0277bd;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        @media (max-width: 768px) {
+            .appointment-details {
+                grid-template-columns: 1fr;
+            }
+            .appointment-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .history-container {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="history-container">
+        <a href="{{ url_for('doctor_dashboard') }}" class="back-link"> Back to Dashboard</a>
+
+        <div class="header-section">
+            <h1> Patient Medical History</h1>
+            <p class="mb-0">Complete appointment and treatment records for the patient</p>
+        </div>
+
+        <!-- Patient Information -->
+        <div class="patient-info">
+            <strong> Patient Details</strong>
+            <div class="patient-info-row">
+                <span class="info-label">Name:</span>
+                <span class="info-value">{{ patient.name }}</span>
+            </div>
+            <div class="patient-info-row">
+                <span class="info-label">Contact:</span>
+                <span class="info-value">{{ patient.contact or 'N/A' }}</span>
+            </div>
+            <div class="patient-info-row">
+                <span class="info-label">Blood Group:</span>
+                <span class="info-value">{{ patient.blood_group or 'N/A' }}</span>
+            </div>
+        </div>
+
+        <!-- Tabs for different history views -->
+        <div class="tab-section">
+            <ul class="nav nav-tabs" id="historyTabs">
+                <li class="nav-item">
+                    <a class="nav-link active" id="appointments-tab" data-bs-toggle="tab" href="#appointments-content">
+                         Appointments with Me
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="completed-tab" data-bs-toggle="tab" href="#completed-content">
+                         Completed Appointments
+                    </a>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="historyTabsContent" style="margin-top: 20px;">
+                <!-- Appointments with this Doctor -->
+                <div class="tab-pane fade show active" id="appointments-content">
+                    {% if appointments %}
+                        {% for appointment in appointments %}
+                            <div class="appointment-card">
+                                <div class="appointment-header">
+                                    <div>
+                                        <div class="appointment-date"> {{ appointment.date.strftime('%B %d, %Y') }}</div>
+                                        <div class="appointment-time"> {{ appointment.st_time.strftime('%H:%M') }} - {{ appointment.en_time.strftime('%H:%M') }}</div>
+                                    </div>
+                                    <span class="appointment-status {% if appointment.status == 'Completed' %}status-completed{% elif appointment.status == 'Cancelled' %}status-cancelled{% else %}status-booked{% endif %}">
+                                        {{ appointment.status }}
+                                    </span>
+                                </div>
+
+                                <div class="appointment-details">
+                                    <div class="detail-item">
+                                        <span class="detail-label">Status:</span>
+                                        <span class="detail-value">{{ appointment.status }}</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Doctor:</span>
+                                        <span class="detail-value">{{ appointment.doctor.name }} ({{ appointment.doctor.specialization }})</span>
+                                    </div>
+                                </div>
+
+                                <!-- Treatment Details if exists -->
+                                {% if appointment.treatment %}
+                                    <div class="treatment-section">
+                                        <div class="treatment-title">Treatment Details</div>
+                                        
+                                        {% if appointment.treatment.diagnosis %}
+                                            <div class="treatment-item">
+                                                <div class="treatment-label">Diagnosis:</div>
+                                                <div class="treatment-content">{{ appointment.treatment.diagnosis }}</div>
+                                            </div>
+                                        {% endif %}
+
+                                        {% if appointment.treatment.prescription %}
+                                            <div class="treatment-item">
+                                                <div class="treatment-label">Prescription:</div>
+                                                <div class="treatment-content">{{ appointment.treatment.prescription }}</div>
+                                            </div>
+                                        {% endif %}
+
+                                        {% if appointment.treatment.notes %}
+                                            <div class="treatment-item">
+                                                <div class="treatment-label">Doctor's Notes:</div>
+                                                <div class="treatment-content">{{ appointment.treatment.notes }}</div>
+                                            </div>
+                                        {% endif %}
+
+                                        {% if appointment.treatment.created_at %}
+                                            <div class="treatment-item">
+                                                <div class="treatment-label">Created:</div>
+                                                <div class="treatment-content">{{ appointment.treatment.created_at.strftime('%B %d, %Y at %I:%M %p') }}</div>
+                                            </div>
+                                        {% endif %}
+
+                                        <div style="margin-top: 15px; display: flex; gap: 10px;">
+                                            <a href="{{ url_for('doctor_treatment', appointment_id=appointment.id) }}" class="btn btn-primary" style="padding: 8px 16px; background: linear-gradient(135deg, #0277bd 0%, #0288d1 100%); color: white; text-decoration: none; border-radius: 4px; display: inline-block;">Edit Treatment</a>
+                                        </div>
+                                    </div>
+                                {% elif appointment.status == 'Completed' %}
+                                    <div class="treatment-section">
+                                        <div class="treatment-title">Treatment Details</div>
+                                        <p style="color: #999; font-style: italic;">No treatment record added yet.</p>
+                                        <div style="margin-top: 15px;">
+                                            <a href="{{ url_for('doctor_treatment', appointment_id=appointment.id) }}" class="btn btn-primary" style="padding: 10px 20px; background: linear-gradient(135deg, #0277bd 0%, #0288d1 100%); color: white; text-decoration: none; border-radius: 4px; display: inline-block;">Write Treatment</a>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon"></div>
+                            <p>No appointments found with this patient.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Completed Appointments (Complete History) -->
+                <div class="tab-pane fade" id="completed-content">
+                    {% if completed_appointments %}
+                        {% for appointment in completed_appointments %}
+                            <div class="appointment-card">
+                                <div class="appointment-header">
+                                    <div>
+                                        <div class="appointment-date"> {{ appointment.date.strftime('%B %d, %Y') }}</div>
+                                        <div class="appointment-time"> {{ appointment.st_time.strftime('%H:%M') }} - {{ appointment.en_time.strftime('%H:%M') }}</div>
+                                    </div>
+                                    <span class="appointment-status status-completed"> Completed</span>
+                                </div>
+
+                                <div class="appointment-details">
+                                    <div class="detail-item">
+                                        <span class="detail-label">Doctor:</span>
+                                        <span class="detail-value">{{ appointment.doctor.name }} ({{ appointment.doctor.specialization }})</span>
+                                    </div>
+                                    <div class="detail-item">
+                                        <span class="detail-label">Status:</span>
+                                        <span class="detail-value">Completed</span>
+                                    </div>
+                                </div>
+
+                                <!-- Treatment Details if exists -->
+                                {% if appointment.treatment %}
+                                    <div class="treatment-section">
+                                        <div class="treatment-title"> Treatment Details</div>
+                                        
+                                        {% if appointment.treatment.diagnosis %}
+                                            <div class="treatment-item">
+                                                <div class="treatment-label"> Diagnosis:</div>
+                                                <div class="treatment-content">{{ appointment.treatment.diagnosis }}</div>
+                                            </div>
+                                        {% endif %}
+
+                                        {% if appointment.treatment.prescription %}
+                                            <div class="treatment-item">
+                                                <div class="treatment-label"> Prescription:</div>
+                                                <div class="treatment-content">{{ appointment.treatment.prescription }}</div>
+                                            </div>
+                                        {% endif %}
+
+                                        {% if appointment.treatment.notes %}
+                                            <div class="treatment-item">
+                                                <div class="treatment-label"> Doctor's Notes:</div>
+                                                <div class="treatment-content">{{ appointment.treatment.notes }}</div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div style="margin-top: 15px;">
+                                        <a href="{{ url_for('write_prescription', appointment_id=appointment.id) }}" class="btn btn-primary" style="padding: 8px 16px; background: linear-gradient(135deg, #0277bd 0%, #0288d1 100%); color: white; text-decoration: none; border-radius: 4px; display: inline-block;">Edit Prescription</a>
+                                    </div>
+                                {% else %}
+                                    <div style="margin-top: 15px;">
+                                        <a href="{{ url_for('write_prescription', appointment_id=appointment.id) }}" class="btn btn-primary" style="padding: 10px 20px; background: linear-gradient(135deg, #0277bd 0%, #0288d1 100%); color: white; text-decoration: none; border-radius: 4px; display: inline-block;">Write Prescription</a>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-state-icon"></div>
+                            <p>No completed appointments found in the system.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

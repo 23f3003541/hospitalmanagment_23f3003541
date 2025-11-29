@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Patients - Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <div class="navbar">
+        <div class="navbar-content">
+            <div class="navbar-brand"> All Patients</div>
+            <div class="navbar-links">
+                <a href="{{ url_for('admin_add_patient') }}">+ Add Patient</a>
+                <a href="{{ url_for('admin_search') }}">Search</a>
+                <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('logout') }}">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ 'error' if category == 'error' else 'success' }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Patients List Section -->
+        <div class="section">
+            <h1> All Patients</h1>
+            
+            {% if patients %}
+            <p><strong>Total Patients:</strong> {{ patients|length }}</p>
+            
+            <div class="overflow">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Username</th>
+                            <th>Gender</th>
+                            <th>Blood Group</th>
+                            <th>Contact</th>
+                            <th>Date of Birth</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for patient in patients %}
+                        <tr>
+                            <td>{{ patient.id }}</td>
+                            <td>{{ patient.name }}</td>
+                            <td>{{ patient.username }}</td>
+                            <td>{{ patient.gender if patient.gender else 'N/A' }}</td>
+                            <td>{{ patient.blood_group if patient.blood_group else 'N/A' }}</td>
+                            <td>{{ patient.contact if patient.contact else 'N/A' }}</td>
+                            <td>{{ patient.date_of_birth.strftime('%Y-%m-%d') if patient.date_of_birth else 'N/A' }}</td>
+                            <td>
+                                <span class="{% if patient.is_blacklisted %}status-blacklisted{% else %}status-active{% endif %}">
+                                    {{ 'Blacklisted' if patient.is_blacklisted else 'Active' }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-links">
+                                    <a href="{{ url_for('admin_view_patient', patient_id=patient.id) }}">View</a>
+                                    <a href="{{ url_for('admin_edit_patient', patient_id=patient.id) }}">Edit</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="empty-msg">No patients found.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

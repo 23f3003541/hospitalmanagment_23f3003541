@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Patient</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .info-table { width: 100%; }
+        .info-table td:first-child { font-weight: bold; color: #0277bd; width: 30%; }
+        
+        .stat-box { background: linear-gradient(135deg, #01579b 0%, #00bcd4 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; }
+        .stat-box h3 { font-size: 28px; margin-bottom: 5px; }
+        .stat-box p { font-size: 14px; opacity: 0.9; }
+        
+        .action-buttons { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; transform: scale(1.05); }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; transform: scale(1.05); }
+        
+        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
+        .status-active { background: #d4edda; color: #155724; }
+        .status-blacklisted { background: #f8d7da; color: #721c24; }
+        
+        .profile-header { background: linear-gradient(135deg, #01579b 0%, #00bcd4 100%); color: white; padding: 30px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+        .profile-header h1 { font-size: 32px; margin-bottom: 10px; border: none; }
+        .profile-header p { margin: 5px 0; opacity: 0.9; }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <div class="navbar">
+        <div class="navbar-content">
+            <div class="navbar-brand"> Patient Profile</div>
+            <div class="navbar-links">
+                <a href="{{ url_for('admin_search') }}">Search</a>
+                <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('logout') }}">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ 'error' if category == 'error' else 'success' }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <h1>{{ patient.name }}</h1>
+            <p>Patient ID: {{ patient.id }}</p>
+            <span class="status-badge {% if patient.is_blacklisted %}status-blacklisted{% else %}status-active{% endif %}">
+                {{ 'BLACKLISTED' if patient.is_blacklisted else 'ACTIVE' }}
+            </span>
+        </div>
+
+        <!-- Personal Information Section -->
+        <div class="section">
+            <h2> Personal Information</h2>
+            <table class="info-table">
+                <tr>
+                    <td>Patient ID:</td>
+                    <td>{{ patient.id }}</td>
+                </tr>
+                <tr>
+                    <td>Name:</td>
+                    <td>{{ patient.name }}</td>
+                </tr>
+                <tr>
+                    <td>Username:</td>
+                    <td>{{ patient.username }}</td>
+                </tr>
+                <tr>
+                    <td>Date of Birth:</td>
+                    <td>{{ patient.date_of_birth if patient.date_of_birth else 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <td>Gender:</td>
+                    <td>{{ patient.gender if patient.gender else 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <td>Blood Group:</td>
+                    <td>{{ patient.blood_group if patient.blood_group else 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <td>Contact:</td>
+                    <td>{{ patient.contact if patient.contact else 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <td>Email:</td>
+                    <td>{{ patient.email if patient.email else 'N/A' }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Appointment History Section -->
+        <div class="section">
+            <h2> Appointment History</h2>
+            {% if appointments %}
+            <p><strong>Total Appointments:</strong> <span class="stat-box" style="background: #0277bd; padding: 2px 8px; display: inline-block;">{{ appointments|length }}</span></p>
+            <div class="overflow">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Doctor</th>
+                            <th>Specialization</th>
+                            <th>Status</th>
+                            <th>Diagnosis</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for apt in appointments %}
+                        <tr>
+                            <td>{{ apt.date.strftime('%Y-%m-%d') if apt.date else 'N/A' }}</td>
+                            <td>{{ apt.st_time.strftime('%H:%M') if apt.st_time else 'N/A' }} - {{ apt.en_time.strftime('%H:%M') if apt.en_time else 'N/A' }}</td>
+                            <td>Dr. {{ apt.doctor.name if apt.doctor else 'N/A' }}</td>
+                            <td>{{ apt.doctor.specialization if apt.doctor else 'N/A' }}</td>
+                            <td><span style="color: #0277bd; font-weight: bold;">{{ apt.status }}</span></td>
+                            <td>{{ apt.diagnosis[:50] + '...' if apt.diagnosis and apt.diagnosis|length > 50 else (apt.diagnosis if apt.diagnosis else 'No diagnosis') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="empty-msg">No appointments yet.</p>
+            {% endif %}
+        </div>
+
+        <!-- Actions Section -->
+        <div class="section">
+            <h2> Actions</h2>
+            <div class="action-buttons">
+                <a href="{{ url_for('admin_edit_patient', patient_id=patient.id) }}" class="btn btn-primary">
+                     Edit Information
+                </a>
+                <a href="{{ url_for('admin_blacklist_patient', patient_id=patient.id) }}" 
+                   class="btn {% if patient.is_blacklisted %}btn-success{% else %}btn-danger{% endif %}"
+                   onclick="return confirm('Are you sure you want to {% if patient.is_blacklisted %}activate{% else %}blacklist{% endif %} this patient?')">
+                    {{ ' Activate Patient' if patient.is_blacklisted else ' Blacklist Patient' }}
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

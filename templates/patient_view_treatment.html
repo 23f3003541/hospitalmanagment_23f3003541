@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treatment Details - Hospital Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .treatment-container {
+            max-width: 700px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .treatment-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .treatment-header {
+            background: linear-gradient(135deg, #01579b 0%, #00bcd4 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .treatment-header h2 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+        .appointment-info {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #333;
+        }
+        .info-value {
+            color: #666;
+        }
+        .treatment-body {
+            padding: 30px;
+        }
+        .treatment-section {
+            margin-bottom: 25px;
+        }
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #333;
+            border-left: 4px solid #0277bd;
+            padding-left: 15px;
+            margin-bottom: 12px;
+        }
+        .section-content {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            line-height: 1.6;
+            color: #555;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .empty-content {
+            color: #999;
+            font-style: italic;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #0277bd;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        .print-btn {
+            background: #0277bd;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        .print-btn:hover {
+            background: #00bcd4;
+            transform: translateY(-2px);
+        }
+        @media print {
+            .no-print {
+                display: none;
+            }
+            .treatment-card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="treatment-container">
+        <a href="{{ url_for('patient_dashboard') }}" class="back-link no-print"> Back to Dashboard</a>
+
+        <div class="treatment-card">
+            <div class="treatment-header">
+                <h2> Treatment Details</h2>
+                <p style="margin: 10px 0 0 0; opacity: 0.9;">Complete appointment record</p>
+            </div>
+
+            <!-- Appointment Information -->
+            <div class="appointment-info">
+                <div class="info-row">
+                    <span class="info-label">Doctor:</span>
+                    <span class="info-value">Dr. {{ appointment.doctor.name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Specialization:</span>
+                    <span class="info-value">{{ appointment.doctor.specialization }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Date:</span>
+                    <span class="info-value">{{ appointment.date.strftime('%B %d, %Y') }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Time:</span>
+                    <span class="info-value">{{ appointment.st_time.strftime('%H:%M') }} - {{ appointment.en_time.strftime('%H:%M') }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Status:</span>
+                    <span class="info-value">
+                        <span class="badge bg-success">{{ appointment.status }}</span>
+                    </span>
+                </div>
+                {% if appointment.treatment %}
+                    <div class="info-row">
+                        <span class="info-label">Record Date:</span>
+                        <span class="info-value">{{ appointment.treatment.created_at.strftime('%B %d, %Y at %H:%M') }}</span>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Treatment Details -->
+            <div class="treatment-body">
+                {% if appointment.treatment %}
+                    <!-- Diagnosis -->
+                    <div class="treatment-section">
+                        <div class="section-title"> Diagnosis</div>
+                        <div class="section-content">
+                            {{ appointment.treatment.diagnosis }}
+                        </div>
+                    </div>
+
+                    <!-- Prescription -->
+                    {% if appointment.treatment.prescription %}
+                        <div class="treatment-section">
+                            <div class="section-title"> Prescription</div>
+                            <div class="section-content">
+                                {{ appointment.treatment.prescription }}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Doctor's Notes -->
+                    {% if appointment.treatment.notes %}
+                        <div class="treatment-section">
+                            <div class="section-title"> Doctor's Notes</div>
+                            <div class="section-content">
+                                {{ appointment.treatment.notes }}
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <div class="no-print">
+                        <button onclick="window.print()" class="print-btn"> Print This Record</button>
+                    </div>
+                {% else %}
+                    <div class="text-center" style="padding: 40px 20px; color: #999;">
+                        <p style="font-size: 1.1rem; margin-bottom: 10px;"> No treatment details recorded yet</p>
+                        <p>The doctor will record treatment information after the appointment is completed.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-4 no-print" role="alert">
+            <strong> Important:</strong> Keep a copy of your treatment records for your medical records. If you have any questions about your treatment, please contact the doctor.
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

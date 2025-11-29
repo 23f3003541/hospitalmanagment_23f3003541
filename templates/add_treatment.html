@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Treatment - Hospital Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .treatment-container {
+            max-width: 700px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .treatment-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        .header-section {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+            display: block;
+        }
+        .form-control, textarea.form-control {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 1rem;
+        }
+        .form-control:focus, textarea.form-control:focus {
+            border-color: #28a745;
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+        }
+        textarea.form-control {
+            min-height: 120px;
+            font-family: 'Arial', sans-serif;
+            resize: vertical;
+        }
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+        .btn-submit {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            flex: 1;
+            transition: all 0.3s ease;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(40, 167, 69, 0.4);
+        }
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            flex: 1;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .btn-cancel:hover {
+            background: #5a6268;
+        }
+        .appointment-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #28a745;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #333;
+        }
+        .info-value {
+            color: #666;
+        }
+        .required-note {
+            color: #dc3545;
+            font-size: 0.85rem;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #28a745;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+        h2 {
+            color: white;
+            margin: 0;
+        }
+        .alert-danger {
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="treatment-container">
+        <a href="{{ url_for('doctor_dashboard') }}" class="back-link"> Back to Dashboard</a>
+
+        <div class="treatment-card">
+            <div class="header-section">
+                <h2> Add/Update Treatment Record</h2>
+                <small>Document the patient's treatment after the appointment</small>
+            </div>
+
+            {% if message %}
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endif %}
+
+            <!-- Appointment Details -->
+            <div class="appointment-info">
+                <strong> Appointment Details</strong>
+                <div class="info-row">
+                    <span class="info-label">Patient:</span>
+                    <span class="info-value">{{ appointment.patient.name if appointment.patient else 'N/A' }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Date:</span>
+                    <span class="info-value">{{ appointment.date.strftime('%B %d, %Y') }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Time:</span>
+                    <span class="info-value">{{ appointment.st_time.strftime('%H:%M') }} - {{ appointment.en_time.strftime('%H:%M') }}</span>
+                </div>
+            </div>
+
+            <!-- Treatment Form -->
+            <form method="POST">
+                <div class="form-group">
+                    <label for="diagnosis"> Diagnosis <span class="required-note">*Required</span></label>
+                    <textarea id="diagnosis" name="diagnosis" class="form-control" required placeholder="Enter the diagnosis for this patient...">{% if appointment.treatment %}{{ appointment.treatment.diagnosis }}{% endif %}</textarea>
+                    <small class="text-muted">Describe the patient's condition and findings from the appointment.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="prescription"> Prescription</label>
+                    <textarea id="prescription" name="prescription" class="form-control" placeholder="Enter medications and dosage instructions...">{% if appointment.treatment %}{{ appointment.treatment.prescription }}{% endif %}</textarea>
+                    <small class="text-muted">List any medications prescribed, dosage, and frequency.</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes"> Doctor's Notes</label>
+                    <textarea id="notes" name="notes" class="form-control" placeholder="Additional notes, recommendations, or follow-up instructions...">{% if appointment.treatment %}{{ appointment.treatment.notes }}{% endif %}</textarea>
+                    <small class="text-muted">Additional information such as follow-up appointments, lifestyle changes, or precautions.</small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit"> {% if appointment.treatment %}Update{% else %}Add{% endif %} Treatment</button>
+                    <a href="{{ url_for('doctor_dashboard') }}" class="btn-cancel">Cancel</a>
+                </div>
+            </form>
+        </div>
+
+        <div class="alert alert-info mt-4" role="alert">
+            <strong> Important:</strong> This information will be saved permanently in the patient's medical record. Please ensure all details are accurate and complete. The patient will be able to view this record.
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Department - Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h2>Add Department</h2>
+        {% if message %}
+            <div class="message">{{ message }}</div>
+        {% endif %}
+        <form method="POST" style="display:flex;flex-direction:column;gap:16px;">
+    <input name="dept_name" placeholder="Department Name" style="padding:10px; font-size:16px;">
+    <textarea name="dept_description" placeholder="Department Description" style="padding:10px; font-size:16px; resize:vertical;"></textarea>
+    <button type="submit" style="padding:12px; font-size:18px; background:#007fff; color:#fff; border:none; border-radius:5px;">Add Department</button>
+        </form>
+    </div>
+</body>
+</html>
+        

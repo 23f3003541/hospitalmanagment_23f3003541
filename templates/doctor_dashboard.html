@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Doctor Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="section">
+            <h2>Welcome, Dr. {{ doctor.name }}</h2>
+            <a href="{{ url_for('logout') }}" class="btn" style="float: right;">Logout</a>
+            <p>Department: {{ doctor.department.name }}</p>
+            <p>Specialization: {{ doctor.specialization }}</p>
+        </div>
+
+        <div class="section">
+            <h2>Upcoming Appointments</h2>
+            <table class="appointments-table">
+                <thead>
+                    <tr class="table-header">
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Patient</th>
+                        <th>Status</th>
+                        <th>Treatment / History</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appt in upcoming_appointments %}
+                    <tr>
+                        <td>{{ appt.date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ appt.st_time.strftime('%H:%M') }} - {{ appt.en_time.strftime('%H:%M') }}</td>
+                        <td>{% if appt.patient %}{{ appt.patient.name }}{% else %}N/A{% endif %}</td>
+                        <td class="status-{{ appt.status.lower() }}">{{ appt.status }}</td>
+                        <td>
+                            {% if appt.treatment %}
+                                <button type="button" class="btn btn-view-treatment" data-bs-toggle="modal" data-bs-target="#treatmentModal{{ appt.id }}">
+                                    View Treatment
+                                </button>
+                            {% else %}
+                                <button type="button" class="btn btn-no-record" disabled>
+                                    No Record
+                                </button>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if appt.status == 'Booked' %}
+                                <a href="{{ url_for('doctor_view_appointment', appointment_id=appt.id) }}" class="btn btn-action-view">View</a>
+                                <a href="{{ url_for('doctor_treatment', appointment_id=appt.id) }}" class="btn btn-action-prescription">Write Prescription</a>
+                                <a href="{{ url_for('update_appointment_status', appointment_id=appt.id, status='Completed') }}" class="btn btn-action-complete">Mark Completed</a>
+                                <a href="{{ url_for('update_appointment_status', appointment_id=appt.id, status='Cancelled') }}" class="btn btn-action-cancel">Cancel</a>
+                            {% elif appt.status == 'Completed' %}
+                                <a href="{{ url_for('doctor_treatment', appointment_id=appt.id) }}" class="btn btn-action-edit">View/Edit Treatment</a>
+                            {% elif appt.status == 'Cancelled' %}
+                                <span style="color: #999;">Cancelled</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- Treatment Modals -->
+            {% for appt in upcoming_appointments %}
+                {% if appt.treatment %}
+                <div class="modal fade" id="treatmentModal{{ appt.id }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content treatment-modal">
+                            <div class="modal-header treatment-modal-header">
+                                <h5 class="modal-title">Treatment Record</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body treatment-modal-body">
+                                <div class="treatment-section">
+                                    <label class="treatment-label">Patient:</label>
+                                    <p class="treatment-value">{% if appt.patient %}{{ appt.patient.name }}{% else %}N/A{% endif %}</p>
+                                </div>
+                                <div class="treatment-section">
+                                    <label class="treatment-label">Appointment Date:</label>
+                                    <p class="treatment-value">{{ appt.date.strftime('%B %d, %Y') }} at {{ appt.st_time.strftime('%H:%M') }}</p>
+                                </div>
+                                <div class="treatment-section">
+                                    <label class="treatment-label">Diagnosis:</label>
+                                    <p class="treatment-value">{{ appt.treatment.diagnosis }}</p>
+                                </div>
+                                <div class="treatment-section">
+                                    <label class="treatment-label">Prescription:</label>
+                                    <p class="treatment-value">{{ appt.treatment.prescription if appt.treatment.prescription else 'N/A' }}</p>
+                                </div>
+                                <div class="treatment-section">
+                                    <label class="treatment-label">Notes:</label>
+                                    <p class="treatment-value">{{ appt.treatment.notes if appt.treatment.notes else 'N/A' }}</p>
+                                </div>
+                                <div class="treatment-section">
+                                    <label class="treatment-label">Recorded On:</label>
+                                    <p class="treatment-value">{{ appt.treatment.created_at.strftime('%B %d, %Y at %I:%M %p') }}</p>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <a href="{{ url_for('doctor_treatment', appointment_id=appt.id) }}" class="btn btn-action-prescription">Edit Treatment</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="section">
+            <h2>My Patients</h2>
+            <table>
+                <tr>
+                    <th>Name</th>
+                    <th>Gender</th>
+                    <th>Blood Group</th>
+                    <th>Actions</th>
+                </tr>
+                {% for patient in assigned_patients %}
+                <tr>
+                    <td>{{ patient.name }}</td>
+                    <td>{{ patient.gender }}</td>
+                    <td>{{ patient.blood_group }}</td>
+                    <td>
+                        <a href="{{ url_for('view_patient_history', patient_id=patient.id) }}" class="btn">View History</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>My Available Slots</h2>
+            {% if available_slots %}
+            <table>
+                <tr>
+                    <th>Date</th>
+                    <th>Start Time</th>
+                    <th>End Time</th>
+                    <th>Status</th>
+                </tr>
+                {% for slot in available_slots %}
+                <tr>
+                    <td>{{ slot.date.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ slot.st_time.strftime('%H:%M') }}</td>
+                    <td>{{ slot.en_time.strftime('%H:%M') }}</td>
+                    <td class="status-active">Available</td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}
+            <p class="empty-msg">No available slots set. Use "Add Availability" below to create time slots.</p>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <h2>Add Availability</h2>
+            <form action="{{ url_for('add_availability') }}" method="POST" class="add-slot-form">
+                <div class="form-group">
+                    <label for="date">Date:</label>
+                    <input type="date" id="date" name="date" required>
+                </div>
+                <div class="form-group">
+                    <label for="start_time">Start Time:</label>
+                    <input type="time" id="start_time" name="start_time" required>
+                </div>
+                <div class="form-group">
+                    <label for="end_time">End Time:</label>
+                    <input type="time" id="end_time" name="end_time" required>
+                </div>
+                <button type="submit">Add Available Slot</button>
+            </form>
+        </div>
+
+        <div class="section">
+            <h3>My Schedule</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Start Time</th>
+                        <th>End Time</th>
+                        <th>Status</th>
+                        <th>Patient</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appt in appointments %}
+                    <tr>
+                        <td>{{ appt.date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ appt.st_time.strftime('%H:%M') }}</td>
+                        <td>{{ appt.en_time.strftime('%H:%M') }}</td>
+                        <td>{{ appt.status }}</td>
+                        <td>
+                            {% if appt.patient_id %}
+                                {{ appt.patient.name }}
+                            {% else %}
+                                Available
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

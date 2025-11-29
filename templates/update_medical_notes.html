@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Medical Notes - Hospital Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .form-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .form-header {
+            background: linear-gradient(135deg, #0277bd 0%, #0288d1 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .form-header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+        .form-header p {
+            margin: 10px 0 0 0;
+            font-size: 1rem;
+            opacity: 0.95;
+        }
+        .form-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        .section-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #0277bd;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #0277bd;
+            padding-bottom: 10px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        textarea.form-control {
+            resize: vertical;
+            min-height: 120px;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 30px;
+            justify-content: flex-end;
+        }
+        .btn {
+            padding: 10px 25px;
+            font-weight: 500;
+            border-radius: 5px;
+            transition: 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #0277bd 0%, #0288d1 100%);
+            color: white;
+            border: none;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #01579b 0%, #0277bd 100%);
+            color: white;
+        }
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+            border: none;
+        }
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+        .appointment-info {
+            background: #f0f8ff;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #0277bd;
+            margin-bottom: 25px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .info-item {
+            margin-bottom: 0;
+        }
+        .info-label {
+            font-size: 0.85rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .info-value {
+            font-size: 1rem;
+            color: #333;
+            font-weight: 500;
+        }
+        .hint-text {
+            font-size: 0.9rem;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="form-container">
+        <a href="{{ url_for('view_patient_history', patient_id=appointment.patient_id) }}" class="back-link"> Back to Patient History</a>
+
+        <div class="form-header">
+            <h1>Medical Notes & History</h1>
+            <p>Add or update diagnosis, prescription, and detailed notes for patient reference</p>
+        </div>
+
+        <div class="form-card">
+            <!-- Appointment Information -->
+            <div class="appointment-info">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Patient Name</div>
+                        <div class="info-value">{{ appointment.patient.name }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Appointment Date</div>
+                        <div class="info-value">{{ appointment.date.strftime('%B %d, %Y') }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Appointment Time</div>
+                        <div class="info-value">{{ appointment.st_time.strftime('%I:%M %p') }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Status</div>
+                        <div class="info-value">{{ appointment.status }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <form method="POST">
+                <!-- Diagnosis Section -->
+                <div class="section-title">Diagnosis</div>
+                <div class="form-group">
+                    <label for="diagnosis" class="form-label">Diagnosis</label>
+                    <textarea class="form-control" id="diagnosis" name="diagnosis" placeholder="Enter the patient's diagnosis based on consultation...">{% if treatment %}{{ treatment.diagnosis }}{% endif %}</textarea>
+                    <div class="hint-text">Document the medical condition or findings identified during the appointment.</div>
+                </div>
+
+                <!-- Prescription Section -->
+                <div class="section-title">Prescription</div>
+                <div class="form-group">
+                    <label for="prescription" class="form-label">Prescription & Medications</label>
+                    <textarea class="form-control" id="prescription" name="prescription" placeholder="Enter prescribed medications, dosage, and frequency...">{% if treatment %}{{ treatment.prescription }}{% endif %}</textarea>
+                    <div class="hint-text">Include medication names, dosage, frequency, and any special instructions for the patient.</div>
+                </div>
+
+                <!-- Medical Notes Section -->
+                <div class="section-title">Additional Medical Notes</div>
+                <div class="form-group">
+                    <label for="notes" class="form-label">Doctor's Notes</label>
+                    <textarea class="form-control" id="notes" name="notes" placeholder="Add any additional observations, recommendations, or follow-up instructions...">{% if treatment %}{{ treatment.notes }}{% endif %}</textarea>
+                    <div class="hint-text">Include treatment recommendations, lifestyle changes, follow-up appointments, or any other relevant information for the patient's care.</div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="button-group">
+                    <a href="{{ url_for('view_patient_history', patient_id=appointment.patient_id) }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Medical Notes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

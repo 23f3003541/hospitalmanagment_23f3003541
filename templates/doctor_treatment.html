@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Treatment Record - Hospital Management System</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .treatment-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 20px;
+        }
+        .treatment-header {
+            background: linear-gradient(135deg, #0277bd 0%, #0288d1 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .treatment-header h1 {
+            margin: 0;
+            font-size: 1.8rem;
+        }
+        .treatment-header p {
+            margin: 10px 0 0 0;
+            opacity: 0.95;
+        }
+        .form-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        .appointment-details {
+            background: #e7f3ff;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #0277bd;
+            margin-bottom: 30px;
+        }
+        .detail-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .detail-label {
+            font-size: 0.85rem;
+            color: #0277bd;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .detail-value {
+            font-size: 1rem;
+            color: #333;
+            font-weight: 500;
+        }
+        .form-section {
+            margin-bottom: 30px;
+        }
+        .form-section h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #0277bd;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #0277bd;
+        }
+        .form-group label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        textarea.form-control {
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+        }
+        .hint-text {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 6px;
+            font-style: italic;
+        }
+        .required-badge {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .button-group {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+        .btn {
+            padding: 10px 25px;
+            font-weight: 500;
+            border-radius: 5px;
+            transition: 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #0277bd 0%, #0288d1 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #01579b 0%, #0277bd 100%);
+            color: white;
+        }
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #0277bd;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="treatment-container">
+        <a href="{{ url_for('doctor_dashboard') }}" class="back-link">Back to Dashboard</a>
+
+        <div class="treatment-header">
+            <h1>Treatment Record</h1>
+            <p>{% if treatment %}Edit{% else %}Create New{% endif %} treatment and prescription for appointment</p>
+        </div>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="form-card">
+            <!-- Appointment Details -->
+            <div class="appointment-details">
+                <div class="detail-row">
+                    <div class="detail-item">
+                        <span class="detail-label">Patient Name</span>
+                        <span class="detail-value">{{ appointment.patient.name if appointment.patient else 'N/A' }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Appointment Date</span>
+                        <span class="detail-value">{{ appointment.date.strftime('%B %d, %Y') }}</span>
+                    </div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-item">
+                        <span class="detail-label">Appointment Time</span>
+                        <span class="detail-value">{{ appointment.st_time.strftime('%I:%M %p') }} - {{ appointment.en_time.strftime('%I:%M %p') }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Status</span>
+                        <span class="detail-value">{{ appointment.status }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Treatment Form -->
+            <form method="POST">
+                <!-- Diagnosis Section -->
+                <div class="form-section">
+                    <h3>Diagnosis <span class="required-badge">*</span></h3>
+                    <div class="form-group">
+                        <label for="diagnosis">Medical Diagnosis</label>
+                        <textarea class="form-control" id="diagnosis" name="diagnosis" required>{% if treatment %}{{ treatment.diagnosis }}{% endif %}</textarea>
+                        <div class="hint-text">Describe the patient's condition, symptoms, and diagnosis findings.</div>
+                    </div>
+                </div>
+
+                <!-- Prescription Section -->
+                <div class="form-section">
+                    <h3>Prescription & Medications</h3>
+                    <div class="form-group">
+                        <label for="prescription">Prescription Details</label>
+                        <textarea class="form-control" id="prescription" name="prescription">{% if treatment %}{{ treatment.prescription }}{% endif %}</textarea>
+                        <div class="hint-text">Include medication names, dosage, frequency, and duration. Example: Amoxicillin 500mg twice daily for 7 days</div>
+                    </div>
+                </div>
+
+                <!-- Notes Section -->
+                <div class="form-section">
+                    <h3>Doctor's Notes & Recommendations</h3>
+                    <div class="form-group">
+                        <label for="notes">Additional Notes</label>
+                        <textarea class="form-control" id="notes" name="notes">{% if treatment %}{{ treatment.notes }}{% endif %}</textarea>
+                        <div class="hint-text">Add follow-up instructions, lifestyle recommendations, warning signs to watch for, or schedule next appointment.</div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="button-group">
+                    <a href="{{ url_for('doctor_dashboard') }}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary">Save Treatment Record</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

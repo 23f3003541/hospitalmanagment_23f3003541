@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Add Doctor - Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="register-container">
+        <h2>Add Doctor</h2>
+        {% if message %}
+            <div class="message">{{ message }}</div>
+        {% endif %}
+        <form method="POST">
+            
+            <div class="form-group">
+                <label for="u_name">Username</label>
+                <input type="text" id="u_name" name="u_name" required>
+            </div>
+            <div class="form-group">
+                <label for="pwdd">Password</label>
+                <input type="password" id="pwdd" name="pwdd" required>
+            </div>
+             <div class="form-group">
+                <label for="email">E-Mail</label>
+                <input type="email" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="name1">Full Name</label>
+                <input type="text" id="name1" name="name1" required>
+            </div>
+            <div class="form-group">
+                <label for="specialization">Specialization</label>
+                <input type="text" id="specialization" name="specialization" required>
+            </div>
+            <div class="form-group">
+                <label for="department_id">Department</label>
+                <select id="department_id" name="department_id" required>
+                    <option value="">Select</option>
+                    {% for dept in departments %}
+                        <option value="{{ dept.id }}">{{ dept.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit">Add Doctor</button>
+        </form>
+    </div>
+</body>
+</html>

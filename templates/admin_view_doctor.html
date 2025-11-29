@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Doctor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .info-table { width: 100%; }
+        .info-table td:first-child { font-weight: bold; color: #0277bd; width: 30%; }
+        
+        .stat-box { background: linear-gradient(135deg, #01579b 0%, #00bcd4 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; }
+        .stat-box h3 { font-size: 28px; margin-bottom: 5px; }
+        .stat-box p { font-size: 14px; opacity: 0.9; }
+        
+        .action-buttons { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        .btn-danger { background: #dc3545; color: white; }
+        .btn-danger:hover { background: #c82333; transform: scale(1.05); }
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; transform: scale(1.05); }
+        
+        .status-badge { display: inline-block; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
+        .status-active { background: #d4edda; color: #155724; }
+        .status-blacklisted { background: #f8d7da; color: #721c24; }
+        
+        .profile-header { background: linear-gradient(135deg, #01579b 0%, #00bcd4 100%); color: white; padding: 30px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+        .profile-header h1 { font-size: 32px; margin-bottom: 10px; border: none; }
+        .profile-header p { margin: 5px 0; opacity: 0.9; }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <div class="navbar">
+        <div class="navbar-content">
+            <div class="navbar-brand"> Doctor Profile</div>
+            <div class="navbar-links">
+                <a href="{{ url_for('admin_search') }}">Search</a>
+                <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+                <a href="{{ url_for('logout') }}">Logout</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ 'error' if category == 'error' else 'success' }}">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Profile Header -->
+        <div class="profile-header">
+            <h1>Dr. {{ doctor.name }}</h1>
+            <p>{{ doctor.specialization }}</p>
+            <p>{{ doctor.department.name if doctor.department else 'Department N/A' }}</p>
+            <span class="status-badge {% if doctor.is_blacklisted %}status-blacklisted{% else %}status-active{% endif %}">
+                {{ 'BLACKLISTED' if doctor.is_blacklisted else 'ACTIVE' }}
+            </span>
+        </div>
+
+        <!-- Personal Information Section -->
+        <div class="section">
+            <h2> Personal Information</h2>
+            <table class="info-table">
+                <tr>
+                    <td>Doctor ID:</td>
+                    <td>{{ doctor.id }}</td>
+                </tr>
+                <tr>
+                    <td>Name:</td>
+                    <td>{{ doctor.name }}</td>
+                </tr>
+                <tr>
+                    <td>Username:</td>
+                    <td>{{ doctor.username }}</td>
+                </tr>
+                <tr>
+                    <td>Email:</td>
+                    <td>{{ doctor.email if doctor.email else 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <td>Contact:</td>
+                    <td>{{ doctor.contact if doctor.contact else 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <td>Specialization:</td>
+                    <td>{{ doctor.specialization }}</td>
+                </tr>
+                <tr>
+                    <td>Department:</td>
+                    <td>{{ doctor.department.name if doctor.department else 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <td>Qualifications:</td>
+                    <td>{{ doctor.qualifications if doctor.qualifications else 'N/A' }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Statistics Section -->
+        <div class="section">
+            <h2> Appointment Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <h3>{{ total_appointments }}</h3>
+                    <p>Total Appointments</p>
+                </div>
+                <div class="stat-box">
+                    <h3>{{ completed }}</h3>
+                    <p>Completed Appointments</p>
+                </div>
+                <div class="stat-box">
+                    <h3>{{ pending }}</h3>
+                    <p>Pending Appointments</p>
+                </div>
+                <div class="stat-box">
+                    <h3>{{ total_patients }}</h3>
+                    <p>Total Patients Treated</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions Section -->
+        <div class="section">
+            <h2> Actions</h2>
+            <div class="action-buttons">
+                <a href="{{ url_for('admin_edit_doctor', doctor_id=doctor.id) }}" class="btn btn-primary">
+                     Edit Information
+                </a>
+                <a href="{{ url_for('admin_blacklist_doctor', doctor_id=doctor.id) }}"
+                   class="btn {% if doctor.is_blacklisted %}btn-success{% else %}btn-danger{% endif %}"
+                   onclick="return confirm('{% if doctor.is_blacklisted %}Are you sure you want to activate this doctor?{% else %}Are you sure you want to blacklist this doctor?{% endif %}')">
+                    {{ ' Activate Doctor' if doctor.is_blacklisted else ' Blacklist Doctor' }}
+                </a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
